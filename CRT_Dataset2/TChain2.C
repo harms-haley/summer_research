@@ -6,7 +6,26 @@
 
 void createAndFillHistogram(const std::string& inputDir, const std::string& outputFilename) {
 	TChain *chain = new TChain("crtana/tree");
-	chain->Add((inputDir + "/run*_crtana.root").c_str());
+	TString filePattern = inputDir + "/*crtana.root";
+	std::cout << "Adding files matching pattern: " << filePattern.Data() << std::endl;
+	Int_t nFilesAdded = chain->Add(filePattern);
+	TObjArray *fileList = chain->GetListOfFiles();
+	if (fileList) {
+		for (Int_t i = 0; i < fileList->GetEntries(); ++i) {
+			TChainElement *element = (TChainElement*)fileList->At(i);
+			if (element) {
+				std::cout << "Added file: " << element->GetTitle() << std::endl;
+			}
+		}
+	}
+	
+
+
+
+
+
+
+
 	TH1D *histogram = new TH1D("histogram1D", "1D Histogram", 20, -400, 400);
 	std::vector<double> *cl_sp_x = nullptr;
 	std::vector<double> *cl_sp_z = nullptr;
@@ -28,6 +47,7 @@ void createAndFillHistogram(const std::string& inputDir, const std::string& outp
 					double z = (*cl_sp_z)[j];
 					if (-250 < z && z < -150) {
 						histogram->Fill(x);
+						std::cout << "Filled histogram with x = " << x << std::endl; // Print debug message
 					}	
 				}
 			}
@@ -46,7 +66,7 @@ void createAndFillHistogram(const std::string& inputDir, const std::string& outp
 
 int TChain2() {
 	std::string inputDir = "/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024";
-	std::string outputFilename = "1DHistogram.png";
+	std::string outputFilename = "1DHistogram2.png";
 	createAndFillHistogram(inputDir, outputFilename);
 	return 0;
 }
