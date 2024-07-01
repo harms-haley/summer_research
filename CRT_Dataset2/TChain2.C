@@ -10,24 +10,28 @@ void createAndFillHistogram(const std::string& inputDir, const std::string& outp
 	TH1D *histogram = new TH1D("histogram1D", "1D Histogram", 20, -400, 400);
 	std::vector<double> *cl_sp_x = nullptr;
 	std::vector<double> *cl_sp_z = nullptr;
-	bool cl_has_sp;
+	std::vector<bool> *cl_has_sp = nullptr;
 
 	chain->SetBranchAddress("cl_has_sp", &cl_has_sp);
 	chain->SetBranchAddress("cl_sp_x", &cl_sp_x);
 	chain->SetBranchAddress("cl_sp_z", &cl_sp_z);
 
 	Long64_t nEntries = chain->GetEntries();
-	for (Long64_t i = 0; i < nEntries; ++i) {
+	Long64_t maxEntriesPerFile = 1000;
+	Long64_t entriesToProcess = std::min(nEntries, maxEntriesPerFile);
+	for (Long64_t i = 0; i < entriesToProcess; ++i) {
 		chain->GetEntry(i);
-		if (cl_has_sp) {
-			for (size_t j = 0; j < cl_sp_x->size(); ++j) {
-				double x = (*cl_sp_x)[j];
-				double z = (*cl_sp_z)[j];
-				if (-250 < z && z < -150) {
-					histogram->Fill(x);
+		for (size_t k = 0; k < cl_has_sp->size(); ++k) {
+			if ((*cl_has_sp)[k]) {
+				for (size_t j = 0; j < cl_sp_x->size(); ++j) {
+					double x = (*cl_sp_x)[j];
+					double z = (*cl_sp_z)[j];
+					if (-250 < z && z < -150) {
+						histogram->Fill(x);
+					}	
 				}
 			}
-		}
+		}	
 	}
 	
 	histogram->GetXaxis()->SetTitle("X");
@@ -41,7 +45,7 @@ void createAndFillHistogram(const std::string& inputDir, const std::string& outp
 }
 
 int TChain2() {
-	std::string inputDir = "/path/to/your/files";
+	std::string inputDir = "/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024";
 	std::string outputFilename = "1DHistogram.png";
 	createAndFillHistogram(inputDir, outputFilename);
 	return 0;
