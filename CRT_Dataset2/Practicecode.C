@@ -18,7 +18,7 @@ void drawVariableFromTree(const std::string& filename, const std::string& variab
 	}
 	TCanvas *canvas1 = new TCanvas("canvas1", "Interactive Cut", 800, 600);
 	std::string drawCommand = variable + " > -500";
-	tree->Draw(variable.c_str());
+	tree->Draw(drawCommand.c_str());
 	canvas1->Draw();
 	canvas1->SaveAs(outputFilename.c_str());
 	file->Close();
@@ -29,7 +29,7 @@ void drawVariableFromTree(const std::string& filename, const std::string& variab
 int Practicecode() {
 	std::string filename = "/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13688_crtana.root";
 	std::string variable = "cl_sp_x";
-	std::string outputFilename = "TrialPlot.png";
+	std::string outputFilename = "Xpositioncut.png";
 	drawVariableFromTree(filename, variable, outputFilename);
 	return 0;
 }
