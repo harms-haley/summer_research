@@ -17,8 +17,12 @@ void drawVariableFromTree(const std::string& filename, const std::string& variab
 		return;
 	}
 	TCanvas *canvas1 = new TCanvas("canvas1", "Interactive Cut", 800, 600);
-	std::string drawCommand = variable + " > -500";
-	tree->Draw(drawCommand.c_str());
+	std::string drawCommand = variable + ">>histogram";
+	std::string selection = variable + " > -10000";
+	tree->Draw(drawCommand.c_str(), selection.c_str());
+
+	TH1F *histogram = (TH1F*)gDirectory->Get("histogram");
+  	histogram->Draw();
 	canvas1->Draw();
 	canvas1->SaveAs(outputFilename.c_str());
 	file->Close();
