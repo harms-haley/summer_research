@@ -51,13 +51,19 @@ void createAndFillHistogram(const std::string& inputDir, const std::string& outp
 		std::cout << "cl_sp_z size: " << cl_sp_z->size() << std::endl;
 		std::cout << "cl_sp_ts1 size: " << cl_sp_ts1->size() << std::endl;
 		for (size_t k = 0; k < cl_has_sp->size(); ++k) {
+			std::cout << "Processing entry " << k << std::endl;
 			if ((*cl_has_sp)[k]) {
+				std::cout << "cl_sp_ts1 size: " << cl_sp_ts1->size() << std::endl;
 				if (k < cl_sp_ts1->size()) {
 					double ts1 = (*cl_sp_ts1)[k];
+					std::cout << "ts1[" << k << "] = " << ts1 << std::endl;
 					if (ts1 >= 1529733 && ts1 <=1532800) {
+						std::cout << "cl_sp_x size: " << cl_sp_x->size() << std::endl;
+                				std::cout << "cl_sp_z size: " << cl_sp_z->size() << std::endl;
 						if (k < cl_sp_x->size() && k < cl_sp_z->size()) {
 							double x = (*cl_sp_x)[k];
 							double z = (*cl_sp_z)[k];
+							std::cout << "x[" << k << "] = " << x << ", z[" << k << "] = " << z << std::endl;
 							if (-200 < z && z < -100) {
 								histogram->Fill(x);
 								std::cout << "Filled histogram with x = " << x << std::endl; // Print debug message
@@ -82,7 +88,7 @@ void createAndFillHistogram(const std::string& inputDir, const std::string& outp
 
 int TChain2() {
 	std::string inputDir = "/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024";
-	std::string outputFilename = "1DHistogram3.png";
+	std::string outputFilename = "TimePositionCut.png";
 	createAndFillHistogram(inputDir, outputFilename);
 	return 0;
 }
