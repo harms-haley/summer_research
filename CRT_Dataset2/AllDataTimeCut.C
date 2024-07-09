@@ -4,14 +4,113 @@
 #include "TH2F.h"
 #include "TCanvas.h"
 #include <iostream>
+#include "TF1.h"
+#include <vector>
+#include <cmath>
+#include <numeric>
+#include <algorithm>
+#include "TPaveText.h"
+#include "TF2.h"
 
+
+double gaussian(double *x, double *par) {
+	double arg = (x[0] - par[1]) / par[2];
+    	return par[0] * exp(-0.5 * arg * arg);
+}
+
+double gaussian2D(double *x, double *par) {
+	double argX = (x[0] - par[1]) / par[2];
+    	double argY = (x[1] - par[3]) / par[4];
+    	return par[0] * exp(-0.5 * (argX * argX + argY * argY));
+}
+
+
+double calculate_mean(const std::vector<double>& data) {
+	return std::accumulate(data.begin(), data.end(), 0.0) / data.size();
+}
+double calculate_stddev(const std::vector<double>& data, double mean) {
+	double sum = 0.0;
+    	for (double value : data) {
+        	sum += (value - mean) * (value - mean);
+    	}
+    	return sqrt(sum / data.size());
+}
+
+void fit_gaussian1D(TH1F* histogram) {
+	int n_bins = histogram->GetNbinsX();
+    	std::vector<double> data;
+    	for (int i = 1; i <= n_bins; ++i) {
+        	int bin_count = histogram->GetBinContent(i);
+        	double bin_center = histogram->GetBinCenter(i);
+        	for (int j = 0; j < bin_count; ++j) {
+            		data.push_back(bin_center);
+        	}
+    	}	
+	double mean = calculate_mean(data);
+    	double stddev = calculate_stddev(data, mean);
+
+    	TF1 *fit_func = new TF1("fit_func", gaussian, histogram->GetXaxis()->GetXmin(), histogram->GetXaxis()->GetXmax(), 3);
+    	fit_func->SetParameters(histogram->GetMaximum(), mean, stddev);
+    	histogram->Fit(fit_func, "R");
+	
+	double chi2 = fit_func->GetChisquare();
+    	int ndf = fit_func->GetNDF();
+
+	TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
+    	pt->SetFillColor(0);
+    	pt->SetTextAlign(12);
+    	pt->AddText(Form("#chi^{2} = %.2f", chi2));
+    	pt->AddText(Form("NDF = %d", ndf));
+    	pt->Draw();
+
+    	histogram->GetListOfFunctions()->Add(pt);
+}
+
+void fit_gaussian2D(TH2F* histogram) {
+	int n_binsX = histogram->GetNbinsX();
+    	int n_binsY = histogram->GetNbinsY();
+    	std::vector<double> dataX;
+    	std::vector<double> dataY;
+    	for (int i = 1; i <= n_binsX; ++i) {
+        	for (int j = 1; j <= n_binsY; ++j) {
+            		int bin_count = histogram->GetBinContent(i, j);
+            		double bin_centerX = histogram->GetXaxis()->GetBinCenter(i);
+            		double bin_centerY = histogram->GetYaxis()->GetBinCenter(j);
+            		for (int k = 0; k < bin_count; ++k) {
+                		dataX.push_back(bin_centerX);
+                		dataY.push_back(bin_centerY);
+            		}
+        	}
+    	}
+
+	double meanX = calculate_mean(dataX);
+    	double meanY = calculate_mean(dataY);
+    	double stddevX = calculate_stddev(dataX, meanX);
+    	double stddevY = calculate_stddev(dataY, meanY);
+
+    	TF2 *fit_func = new TF2("fit_func", gaussian2D, histogram->GetXaxis()->GetXmin(), histogram->GetXaxis()->GetXmax(), histogram->GetYaxis()->GetXmin(), histogram->GetYaxis()->GetXmax(), 5);
+    	fit_func->SetParameters(histogram->GetMaximum(), meanX, stddevX, meanY, stddevY);
+    	histogram->Fit(fit_func, "R");
+
+    	double chi2 = fit_func->GetChisquare();
+    	int ndf = fit_func->GetNDF();
+
+	TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
+    	pt->SetFillColor(0);
+    	pt->SetTextAlign(12);
+    	pt->AddText(Form("#chi^{2} = %.2f", chi2));
+    	pt->AddText(Form("NDF = %d", ndf));
+    	pt->Draw();
+
+    	histogram->GetListOfFunctions()->Add(pt);
+}
 void AllDataTimeCut() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
 	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13*_crtana.root"); // Replace with your file path pattern
-	TH1F *histogram1_f_t = new TH1F("histogram1_f_t", "Front Face X;X;Counts", 100, -400, 400);
-	TH1F *histogram2_f_t = new TH1F("histogram2_f_t", "Front Face Y;Y;Counts", 100, -400, 400);
-	TH1F *histogram4_f_t = new TH1F("histogram4_f_t", "Time", 100, 1520e3 , 1540e3);
-	TH2F *histogram3_f_t = new TH2F("histogram3_f_t", "Front Face XY;X;Y;Counts", 100, -400, 400, 100, -400, 400);
+	TH1F *histogram1_f_t = new TH1F("histogram1_f_t", "Front Face X;X;Counts", 10, -400, 400);
+	TH1F *histogram2_f_t = new TH1F("histogram2_f_t", "Front Face Y;Y;Counts", 10, -400, 400);
+	TH1F *histogram4_f_t = new TH1F("histogram4_f_t", "Time", 10, 1520e3 , 1540e3);
+	TH2F *histogram3_f_t = new TH2F("histogram3_f_t", "Front Face XY;X;Y;Counts", 10, -400, 400, 10, -400, 400);
     	TCanvas *c1_f_t = new TCanvas("c1_f_t", "Front Face X");
 	TCanvas *c2_f_t = new TCanvas("c2_f_t", "Front Face Y");
 	TCanvas *c3_f_t = new TCanvas("c3_f_t", "Front Face XY");
@@ -62,11 +161,13 @@ void AllDataTimeCut() {
 
 	c1_f_t->cd();
     	histogram1_f_t->Draw();
+	fit_gaussian1D(histogram1_f_t);
     	c2_f_t->cd();
     	histogram2_f_t->Draw();
+	fit_gaussian1D(histogram2_f_t);
     	c3_f_t->cd();
-    	c3_f_t->SetLogz();
-    	histogram3_f_t->Draw("COLZ");	
+    	histogram3_f_t->Draw("COLZ");
+	fit_gaussian2D(histogram3_f_t);	
 	c4_f_t->cd();
 	histogram4_f_t->Draw();
 
