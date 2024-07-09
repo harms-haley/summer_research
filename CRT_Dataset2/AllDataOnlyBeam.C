@@ -104,17 +104,27 @@ void fit_gaussian2D(TH2F* histogram) {
 
     	histogram->GetListOfFunctions()->Add(pt);
 }
-void AllDataNoBeam() {
+void AllDataOnlyBeam() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
 	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run1369*_crtana.root"); // Replace with your file path pattern
 	TH1F *histogram1_f_nb = new TH1F("histogram1_f_nb", "Front Face X;No Beam", 10, -400, 400);
 	TH1F *histogram2_f_nb = new TH1F("histogram2_f_nb", "Front Face Y;No Beam", 10, -400, 400);
-	TH1F *histogram4_f_nb = new TH1F("histogram4_f_nb", "Time", 10, 1520e3 , 1540e3);
 	TH2F *histogram3_f_nb = new TH2F("histogram3_f_nb", "Front Face XY;No Beam", 10, -400, 400, 10, -400, 400);
-    	TCanvas *c1_f_nb = new TCanvas("c1_f_nb", "Front Face X");
-	TCanvas *c2_f_nb = new TCanvas("c2_f_nb", "Front Face Y");
-	TCanvas *c3_f_nb = new TCanvas("c3_f_nb", "Front Face XY");
-	TCanvas *c4_f_nb = new TCanvas("c4_f_nb", "Time");
+
+	TH1F *histogram4_f_tc = new TH1F("histogram1_f_tc", "Front Face X; Time Cut", 10, -400, 400);
+        TH1F *histogram5_f_tc = new TH1F("histogram2_f_tc", "Front Face Y; Time Cut", 10, -400, 400);
+        TH2F *histogram6_f_tc = new TH2F("histogram3_f_tc", "Front Face XY; Time Cut", 10, -400, 400, 10, -400, 400);
+
+
+    	TCanvas *c1_f_nb = new TCanvas("c1_f_nb", "Front Face X NB");
+	TCanvas *c2_f_nb = new TCanvas("c2_f_nb", "Front Face Y NB");
+	TCanvas *c3_f_nb = new TCanvas("c3_f_nb", "Front Face XY NB");
+	TCanvas *c4_f_tc = new TCanvas("c4_f_tc", "Front Face X TC");
+        TCanvas *c5_f_tc = new TCanvas("c5_f_tc", "Front Face Y TC");
+        TCanvas *c6_f_tc = new TCanvas("c6_f_tc", "Front Face XY TC");
+	TCanvas *c7_f_ob = new TCanvas("c7_f_ob", "Front Face X OB");
+        TCanvas *c8_f_ob = new TCanvas("c8_f_ob", "Front Face Y OB");
+        TCanvas *c9_f_ob = new TCanvas("c9_f_ob", "Front Face XY OB");
 
 	std::vector<double> *cl_sp_x = nullptr;
     	std::vector<double> *cl_sp_y = nullptr;
@@ -144,9 +154,17 @@ void AllDataNoBeam() {
 				std::cout << "Entry " << i << ", Hit " << j << ": t1=" << t1 << ", x=" << x << ", y=" << y << ", z=" << z << std::endl;
 			}
 			
-			histogram4_f_nb->Fill(t1);
+			if (1529e3 < t1 && t1 < 1534e3) {
+				if (y > -350 && -370 < x && x < 370) {
+					if (-200 < z && z < -100) {
+						histogram4_f_tc->Fill(x);
+						histogram5_f_tc->Fill(y);
+						histogram6_f_tc->Fill(x,y);
+					}
+				}
+			}
 			
-			if (0 < t1 && t1 < 1529e3 || 1534e3 < t1 <1000e6) {
+			if (0 < t1 && t1 < 1529e3 || 1534e3 < t1 && t1 < 1000e6) {
 				if (y > -350 && -370 < x && x < 370) {  // cut off feet of detector
                     			if (-200 < z && z < -100) {
                         			histogram1_f_nb->Fill(x);
@@ -157,24 +175,51 @@ void AllDataNoBeam() {
             		}
         	}
     	}
-
+	TH1F *histogramx = (TH1F*)histogram4_f_tc->Clone("histogramx");
+	histogramx->Add(histogram1_f_nb, -1.0 / 199999);
+	TH1F *histogramy = (TH1F*)histogram5_f_tc->Clone("histogramy");
+        histogramy->Add(histogram2_f_nb, -1.0 / 199999);
+	TH2F *histogramxy = (TH2F*)histogram6_f_tc->Clone("histogramxy");
+        histogramxy->Add(histogram3_f_nb, -1.0 / 199999);
 
 	c1_f_nb->cd();
     	histogram1_f_nb->Draw();
-	//fit_gaussian1D(histogram1_f_t);
+	fit_gaussian1D(histogram1_f_nb);
     	c2_f_nb->cd();
     	histogram2_f_nb->Draw();
-	//fit_gaussian1D(histogram2_f_t);
+	fit_gaussian1D(histogram2_f_nb);
     	c3_f_nb->cd();
     	histogram3_f_nb->Draw("COLZ");
-	//fit_gaussian2D(histogram3_f_t);	
-	c4_f_nb->cd();
-	histogram4_f_nb->Draw();
+	fit_gaussian2D(histogram3_f_nb);	
+	c4_f_tc->cd();
+	histogram4_f_tc->Draw();
+	fit_gaussian1D(histogram4_f_tc);
+	c5_f_tc->cd();
+        histogram5_f_tc->Draw();
+        fit_gaussian1D(histogram5_f_tc);
+	c6_f_tc->cd();
+        histogram6_f_tc->Draw("COLZ");
+        fit_gaussian2D(histogram6_f_tc);
+	c7_f_ob->cd();
+        histogramx->Draw();
+        fit_gaussian1D(histogramx);
+	c8_f_ob->cd();
+        histogramy->Draw();
+        fit_gaussian1D(histogramy);
+	c9_f_ob->cd();
+        histogramxy->Draw("COLZ");
+        fit_gaussian2D(histogramxy);
 
-	c1_f_nb->SaveAs("Front_face_x_nb_all.png");
-    	c2_f_nb->SaveAs("Front_face_y_nb_all.png");
-    	c3_f_nb->SaveAs("Front_face_nb_all.png");
-	c4_f_nb->SaveAs("Time.png");
+
+	c1_f_nb->SaveAs("Front_face_x_nb.png");
+    	c2_f_nb->SaveAs("Front_face_y_nb.png");
+    	c3_f_nb->SaveAs("Front_face_nb.png");
+	c4_f_tc->SaveAs("Front_face_x_tc.png");
+        c5_f_tc->SaveAs("Front_face_y_tc.png");
+        c6_f_tc->SaveAs("Front_face_tc.png");
+	c7_f_ob->SaveAs("Front_face_x_ob.png");
+        c8_f_ob->SaveAs("Front_face_y_ob.png");
+        c9_f_ob->SaveAs("Front_face_ob.png");
 
 }
 
