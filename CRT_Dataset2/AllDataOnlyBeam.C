@@ -89,9 +89,13 @@ void fit_gaussian2D(TH2F* histogram) {
     	}
 
 	double meanX = calculate_mean(dataX);
+	std::cout << "MeanX = " << meanX << std::endl;
     	double meanY = calculate_mean(dataY);
+	std::cout << "MeanY = " << meanY << std::endl;
     	double stddevX = calculate_stddev(dataX, meanX);
+	std::cout << "stddevX = " << stddevX << std::endl;
     	double stddevY = calculate_stddev(dataY, meanY);
+	std::cout << "stddevY = " << stddevY << std::endl;
 
     	TF2 *fit_func = new TF2("fit_func", gaussian2D, histogram->GetXaxis()->GetXmin(), histogram->GetXaxis()->GetXmax(), histogram->GetYaxis()->GetXmin(), histogram->GetYaxis()->GetXmax(), 5);
     	fit_func->SetParameters(histogram->GetMaximum(), meanX, stddevX, meanY, stddevY);
@@ -107,21 +111,27 @@ void fit_gaussian2D(TH2F* histogram) {
 	double entries = histogram->GetEntries();
 	std::cout << "Entries: " << entries << std::endl;	
 
-	double mean = histogram->GetMaximum();
-    	double sigma = std::sqrt(histogram->GetMaximum());  // Approximation of sigma for contour purposes
-    	
+	//double mean = (meanX, meanY);
+    	//double sigma = (stdevX, stdevY);  // Approximation of sigma for contour purposes
+	//double meanX = calculate_mean(dataX);
+        //double meanY = calculate_mean(dataY);
+        //double stddevX = calculate_stddev(dataX, meanX);
+        //double stddevY = calculate_stddev(dataY, meanY);   	
     	std::vector<double> contours = {
-        	mean - 3 * sigma, 
-        	mean - 2 * sigma, 
-        	mean - 1 * sigma, 
-        	mean + 1 * sigma, 
-        	mean + 2 * sigma, 
-        	mean + 3 * sigma
+        	meanX - 3 * stddevX, meanY - 3 * stddevY, 
+        	meanX - 2 * stddevX, meanY - 2 * stddevY, 
+        	meanX - 1 * stddevX, meanY - 1 * stddevY, 
+        	meanX + 1 * stddevX, meanY + 1 * stddevY,
+        	meanX + 2 * stddevX, meanY + 2 * stddevY,
+        	meanX + 3 * stddevX, meanY + 3 * stddevY,
 	};
 
-	histogram3_f_nb->SetContour(contours.size(), contours.data());
-	histogram6_f_tc->SetContour(contours.size(), contours.data());
-	histogramxy->SetContour(contours.size(), contours.data());
+	histogram->SetContour(contours.size(), contours.data());
+
+
+	//histogram3_f_nb->SetContour(contours.size(), contours.data());
+	//histogram6_f_tc->SetContour(contours.size(), contours.data());
+	//histogramxy->SetContour(contours.size(), contours.data());
 
 	//TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
     	//pt->SetFillColor(0);
@@ -158,7 +168,7 @@ void AllDataOnlyBeam() {
 	TH2F *histogram6_f_tc = new TH2F("histogram6_f_tc", "Front Face XY; Time Cut", 10, -400, 400, 10, -400, 400);
 	histogram6_f_tc->GetXaxis()->SetTitle("X Location (cm)");
         histogram6_f_tc->GetYaxis()->SetTitle("Y Location (cm)");
-	//histogram6_f_tc->SetContour(contours.size(), contours.data());
+	histogram6_f_tc->SetContour(contours.size(), contours.data());
 
     	TCanvas *c1_f_nb = new TCanvas("c1_f_nb", "Front Face X NB");
 	TCanvas *c2_f_nb = new TCanvas("c2_f_nb", "Front Face Y NB");
@@ -233,7 +243,7 @@ void AllDataOnlyBeam() {
         histogramxy->Add(histogram3_f_nb, -1.0 / 199999);
 	histogramxy->GetXaxis()->SetTitle("X Location (cm)");
         histogramxy->GetYaxis()->SetTitle("Y Location (cm)");
-	//histogramxy->SetContour(contours.size(), contours.data());
+	histogramxy->SetContour(contours.size(), contours.data());
 
 	c1_f_nb->cd();
     	histogram1_f_nb->Draw();
