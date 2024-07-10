@@ -11,7 +11,8 @@
 #include <algorithm>
 #include "TPaveText.h"
 #include "TF2.h"
-
+#include <TStyle.h>
+#include <TMath.h>
 
 double gaussian(double *x, double *par) {
 	double arg = (x[0] - par[1]) / par[2];
@@ -56,14 +57,18 @@ void fit_gaussian1D(TH1F* histogram) {
 	double chi2 = fit_func->GetChisquare();
     	int ndf = fit_func->GetNDF();
 
-	TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
-    	pt->SetFillColor(0);
-    	pt->SetTextAlign(12);
-    	pt->AddText(Form("#chi^{2} = %.2f", chi2));
-    	pt->AddText(Form("NDF = %d", ndf));
-    	pt->Draw();
+	gStyle->SetOptStat(0);
+	double entries = histogram->GetEntries();
+	std::cout << "Entries: " << entries << std::endl;
 
-    	histogram->GetListOfFunctions()->Add(pt);
+	//TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
+    	//pt->SetFillColor(0);
+    	//pt->SetTextAlign(12);
+    	//pt->AddText(Form("#chi^{2} = %.2f", chi2));
+    	//pt->AddText(Form("NDF = %d", ndf));
+    	//pt->Draw();
+
+    	//histogram->GetListOfFunctions()->Add(pt);
 }
 
 void fit_gaussian2D(TH2F* histogram) {
@@ -95,26 +100,65 @@ void fit_gaussian2D(TH2F* histogram) {
     	double chi2 = fit_func->GetChisquare();
     	int ndf = fit_func->GetNDF();
 
-	TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
-    	pt->SetFillColor(0);
-    	pt->SetTextAlign(12);
-    	pt->AddText(Form("#chi^{2} = %.2f", chi2));
-    	pt->AddText(Form("NDF = %d", ndf));
-    	pt->Draw();
+	std::cout << "#chi^{2} = " << chi2 << std::endl;
+    	std::cout << "NDF = " << ndf << std::endl;
 
-    	histogram->GetListOfFunctions()->Add(pt);
+	gStyle->SetOptStat(0);
+	double entries = histogram->GetEntries();
+	std::cout << "Entries: " << entries << std::endl;	
+
+	double mean = histogram->GetMaximum();
+    	double sigma = std::sqrt(histogram->GetMaximum());  // Approximation of sigma for contour purposes
+    	
+    	std::vector<double> contours = {
+        	mean - 3 * sigma, 
+        	mean - 2 * sigma, 
+        	mean - 1 * sigma, 
+        	mean + 1 * sigma, 
+        	mean + 2 * sigma, 
+        	mean + 3 * sigma
+	};
+
+	histogram3_f_nb->SetContour(contours.size(), contours.data());
+	histogram6_f_tc->SetContour(contours.size(), contours.data());
+	histogramxy->SetContour(contours.size(), contours.data());
+
+	//TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
+    	//pt->SetFillColor(0);
+    	//pt->SetTextAlign(12);
+    	//pt->AddText(Form("#chi^{2} = %.2f", chi2));
+    	//pt->AddText(Form("NDF = %d", ndf));
+    	//pt->Draw();
+
+    	//histogram->GetListOfFunctions()->Add(pt);
 }
 void AllDataOnlyBeam() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
 	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run1369*_crtana.root"); // Replace with your file path pattern
 	TH1F *histogram1_f_nb = new TH1F("histogram1_f_nb", "Front Face X;No Beam", 10, -400, 400);
+	histogram1_f_nb->GetXaxis()->SetTitle("X Location (cm)");
+    	histogram1_f_nb->GetYaxis()->SetTitle("Number of Hits");
+
 	TH1F *histogram2_f_nb = new TH1F("histogram2_f_nb", "Front Face Y;No Beam", 10, -400, 400);
+	histogram2_f_nb->GetXaxis()->SetTitle("Y Location (cm)");
+        histogram2_f_nb->GetYaxis()->SetTitle("Number of Hits");
+
 	TH2F *histogram3_f_nb = new TH2F("histogram3_f_nb", "Front Face XY;No Beam", 10, -400, 400, 10, -400, 400);
+	histogram3_f_nb->GetXaxis()->SetTitle("X Location (cm)");
+        histogram3_f_nb->GetYaxis()->SetTitle("Y Location (cm)");
 
-	TH1F *histogram4_f_tc = new TH1F("histogram1_f_tc", "Front Face X; Time Cut", 10, -400, 400);
-        TH1F *histogram5_f_tc = new TH1F("histogram2_f_tc", "Front Face Y; Time Cut", 10, -400, 400);
-        TH2F *histogram6_f_tc = new TH2F("histogram3_f_tc", "Front Face XY; Time Cut", 10, -400, 400, 10, -400, 400);
+	TH1F *histogram4_f_tc = new TH1F("histogram4_f_tc", "Front Face X; Time Cut", 10, -400, 400);
+        histogram4_f_tc->GetXaxis()->SetTitle("X Location (cm)");
+        histogram4_f_tc->GetYaxis()->SetTitle("Number of Hits");
 
+	TH1F *histogram5_f_tc = new TH1F("histogram5_f_tc", "Front Face Y; Time Cut", 10, -400, 400);
+        histogram5_f_tc->GetXaxis()->SetTitle("Y Location (cm)");
+        histogram5_f_tc->GetYaxis()->SetTitle("Number of Hits");
+
+	TH2F *histogram6_f_tc = new TH2F("histogram6_f_tc", "Front Face XY; Time Cut", 10, -400, 400, 10, -400, 400);
+	histogram6_f_tc->GetXaxis()->SetTitle("X Location (cm)");
+        histogram6_f_tc->GetYaxis()->SetTitle("Y Location (cm)");
+	//histogram6_f_tc->SetContour(contours.size(), contours.data());
 
     	TCanvas *c1_f_nb = new TCanvas("c1_f_nb", "Front Face X NB");
 	TCanvas *c2_f_nb = new TCanvas("c2_f_nb", "Front Face Y NB");
@@ -177,10 +221,19 @@ void AllDataOnlyBeam() {
     	}
 	TH1F *histogramx = (TH1F*)histogram4_f_tc->Clone("histogramx");
 	histogramx->Add(histogram1_f_nb, -1.0 / 199999);
+	histogramx->GetXaxis()->SetTitle("X Location (cm)");
+        histogramx->GetYaxis()->SetTitle("Number of Hits)");
+
 	TH1F *histogramy = (TH1F*)histogram5_f_tc->Clone("histogramy");
         histogramy->Add(histogram2_f_nb, -1.0 / 199999);
+	histogramy->GetXaxis()->SetTitle("Y Location (cm)");
+        histogramy->GetYaxis()->SetTitle("Number of Hits");
+
 	TH2F *histogramxy = (TH2F*)histogram6_f_tc->Clone("histogramxy");
         histogramxy->Add(histogram3_f_nb, -1.0 / 199999);
+	histogramxy->GetXaxis()->SetTitle("X Location (cm)");
+        histogramxy->GetYaxis()->SetTitle("Y Location (cm)");
+	//histogramxy->SetContour(contours.size(), contours.data());
 
 	c1_f_nb->cd();
     	histogram1_f_nb->Draw();
