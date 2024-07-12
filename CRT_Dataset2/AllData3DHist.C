@@ -66,55 +66,10 @@ void fit_gaussian1D(TH1F* histogram) {
 
 }
 
-void fit_gaussian2D(TH2F* histogram) {
-	int n_binsX = histogram->GetNbinsX();
-    	int n_binsY = histogram->GetNbinsY();
-    	std::vector<double> dataX;
-    	std::vector<double> dataY;
-    	for (int i = 1; i <= n_binsX; ++i) {
-        	for (int j = 1; j <= n_binsY; ++j) {
-            		int bin_count = histogram->GetBinContent(i, j);
-            		double bin_centerX = histogram->GetXaxis()->GetBinCenter(i);
-            		double bin_centerY = histogram->GetYaxis()->GetBinCenter(j);
-            		for (int k = 0; k < bin_count; ++k) {
-                		dataX.push_back(bin_centerX);
-                		dataY.push_back(bin_centerY);
-            		}
-        	}
-    	}
-
-	double meanX = calculate_mean(dataX);
-	std::cout << "MeanX = " << meanX << std::endl;
-    	double meanY = calculate_mean(dataY);
-	std::cout << "MeanY = " << meanY << std::endl;
-    	double stddevX = calculate_stddev(dataX, meanX);
-	std::cout << "stddevX = " << stddevX << std::endl;
-    	double stddevY = calculate_stddev(dataY, meanY);
-	std::cout << "stddevY = " << stddevY << std::endl;
-
-    	TF2 *fit_func = new TF2("fit_func", gaussian2D, histogram->GetXaxis()->GetXmin(), histogram->GetXaxis()->GetXmax(), histogram->GetYaxis()->GetXmin(), histogram->GetYaxis()->GetXmax(), 5);
-    	fit_func->SetParameters(histogram->GetMaximum(), meanX, stddevX, meanY, stddevY);
-    	histogram->Fit(fit_func, "R");
-
-    	double chi2 = fit_func->GetChisquare();
-    	int ndf = fit_func->GetNDF();
-
-	std::cout << "#chi^{2} = " << chi2 << std::endl;
-    	std::cout << "NDF = " << ndf << std::endl;
-
-	gStyle->SetOptStat(0);
-	double entries = histogram->GetEntries();
-	std::cout << "Entries: " << entries << std::endl;	
-	gStyle->SetNumberContours(1);
-	int nContours = 3;
-	std::vector<double> contourLevels = calculateContourLevels(nContours, stddevX, stddevY);
-	plotContours(histogram, fit_func, contourLevels);
-}
-
 
 void AllData3DHist() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
-	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run1369*_crtana.root"); // Replace with your file path pattern
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13*_crtana.root"); // Replace with your file path pattern
 	TH1F *histogram1_f_nb = new TH1F("histogram1_f_nb", "Front Face X;No Beam", 10, -400, 400);
 	histogram1_f_nb->GetXaxis()->SetTitle("X Location (cm)");
     	histogram1_f_nb->GetYaxis()->SetTitle("Number of Hits");
@@ -164,7 +119,7 @@ void AllData3DHist() {
     	chain.SetBranchAddress("cl_sp_z", &cl_sp_z);
     	chain.SetBranchAddress("cl_sp_ts1", &cl_sp_ts1);
 	
-	gStyle->SetNumberContours(1);
+	//gStyle->SetNumberContours(1);
 	Long64_t nEntries = chain.GetEntries();
 
 	for (Long64_t i = 0; i < nEntries; ++i) {
@@ -223,28 +178,23 @@ void AllData3DHist() {
 
     	c3_f_nb->cd();
     	histogram3_f_nb->Draw("COLZ");
-	fit_gaussian2D(histogram3_f_nb);	
-
 	
 	c6_f_tc->cd();
         histogram6_f_tc->Draw("COLZ");
-        fit_gaussian2D(histogram6_f_tc);
-
 
 
 	c9_f_ob->cd();
         histogramxy->Draw("COLZ");
-        fit_gaussian2D(histogramxy);
-	
+
 
 	c3D_f_nb->cd();
-    	histogram3_f_nb->Draw("SURF");
+    	histogram3_f_nb->Draw("LEGO2");
 
    	c3D_f_tc->cd();
-    	histogram6_f_tc->Draw("SURF");
+    	histogram6_f_tc->Draw("LEGO2");
 
     	c3D_f_ob->cd();
-    	histogramxy->Draw("SURF");
+    	histogramxy->Draw("LEGO2");
 
 	
 	c3D_f_nb->SaveAs("Front_face_nb_3D.png");
