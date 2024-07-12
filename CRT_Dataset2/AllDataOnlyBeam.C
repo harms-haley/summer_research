@@ -13,22 +13,28 @@
 #include "TF2.h"
 #include <TStyle.h>
 #include <TMath.h>
+#include <TH2.h>
 #include <TLine.h>
 double gaussian(double *x, double *par) {
 	double arg = (x[0] - par[1]) / par[2];
     	return par[0] * exp(-0.5 * arg * arg);
 }
 
-double gaussian2D(double *x, double *par) {
-	double argX = (x[0] - par[1]) / par[2];
-    	double argY = (x[1] - par[3]) / par[4];
-    	return par[0] * exp(-0.5 * (argX * argX + argY * argY));
+//double gaussian2D(double *x, double *par) {
+//	double argX = (x[0] - par[1]) / par[2];
+  //  	double argY = (x[1] - par[3]) / par[4];
+    //	return par[0] * exp(-0.5 * (argX * argX + argY * argY));
 	
-}
+//}
 
 
 double calculate_mean(const std::vector<double>& data) {
-	return std::accumulate(data.begin(), data.end(), 0.0) / data.size();
+	double sum = 0.0;
+    	for (double value : data) {
+        	sum += value;
+    	}
+    	return sum / data.size();
+	//return std::accumulate(data.begin(), data.end(), 0.0) / data.size();
 }
 double calculate_stddev(const std::vector<double>& data, double mean) {
 	double sum = 0.0;
@@ -36,6 +42,12 @@ double calculate_stddev(const std::vector<double>& data, double mean) {
         	sum += (value - mean) * (value - mean);
     	}
     	return sqrt(sum / data.size());
+}
+double gaussian2D(double *x, double *par) {
+	double argX = (x[0] - par[1]) / par[2];
+    	double argY = (x[1] - par[3]) / par[4];
+    	return par[0] * exp(-0.5 * (argX * argX + argY * argY));
+	
 }
 
 void fit_gaussian1D(TH1F* histogram) {
@@ -62,15 +74,8 @@ void fit_gaussian1D(TH1F* histogram) {
 	double entries = histogram->GetEntries();
 	std::cout << "Entries: " << entries << std::endl;
 
-	//TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
-    	//pt->SetFillColor(0);
-    	//pt->SetTextAlign(12);
-    	//pt->AddText(Form("#chi^{2} = %.2f", chi2));
-    	//pt->AddText(Form("NDF = %d", ndf));
-    	//pt->Draw();
-
-    	//histogram->GetListOfFunctions()->Add(pt);
 }
+  
 
 void fit_gaussian2D(TH2F* histogram) {
 	int n_binsX = histogram->GetNbinsX();
@@ -100,7 +105,29 @@ void fit_gaussian2D(TH2F* histogram) {
 
     	TF2 *fit_func = new TF2("fit_func", gaussian2D, histogram->GetXaxis()->GetXmin(), histogram->GetXaxis()->GetXmax(), histogram->GetYaxis()->GetXmin(), histogram->GetYaxis()->GetXmax(), 5);
     	fit_func->SetParameters(histogram->GetMaximum(), meanX, stddevX, meanY, stddevY);
-    	histogram->Fit(fit_func, "R");
+    	histogram->Fit(fit_func, "N");
+	//int nContours = 3; // Number of contour levels
+    	//std::vector<double> contourLevels(nContours);
+	
+	//gStyle->SetNumberContours(0);
+//	const int nContours = 3; // Number of contour levels
+  //  	double contours_f[nContours];
+    //	for (int i = 0; i < nContours; ++i) {
+      //  	double sigmaX = stddevX * (i + 1);
+        //	double sigmaY = stddevY * (i + 1);
+        //	contours_f[i] = fit_func->Eval(meanX + sigmaX, meanY + sigmaY);
+    //	}
+//	histogram->SetContour(nContours, contours_f);
+
+
+	//histogram->SetContour(nContours, contours_f);
+	//histogram->Draw("COLZ CONT1");	
+       // double sigma1_f = fit_func->GetParameter(0) * exp(-0.5);
+
+       // double contours_f[nContours] = {sigma1_f};
+
+        //fit_func->SetContour(nContours, contours_f);
+       
 
     	double chi2 = fit_func->GetChisquare();
     	int ndf = fit_func->GetNDF();
@@ -112,68 +139,11 @@ void fit_gaussian2D(TH2F* histogram) {
 	double entries = histogram->GetEntries();
 	std::cout << "Entries: " << entries << std::endl;	
 
-	histogram->SetContour(0);
-//	const int n_contours = 6;  // Number of contours
-  //  	double contour_levels[n_contours];
-//	for (int i = 0; i < n_contours; ++i) {
-  //      	contour_levels[i] = fit_func->GetMaximum() * exp(-0.5 * (i + 1) * (i + 1));
-    //	}
-  // Temporarily set to 1 to clear existing contours
-    //	histogram->SetContour(n_contours, contour_levels);
-	/*int n_contours = 6;  // Number of contours
-    	double contour_levels[n_contours];
-    	for (int i = 0; i < n_contours; ++i) {
-        	contour_levels[i] = fit_func->GetMaximum() * exp(-0.5 * (i + 1) * (i + 1));
-		std::cout<<"Fit function maximum: "<<fit_func->GetMaximum()<<std::endl;
-    	}*/
-    	//histogram->SetContour(n_contours, contour_levels);
-//	for (int i = -3; i <= 3; ++i) {
-  //      	for (int j = -3; j <= 3; ++j) {
-    //        		if (i == 0 && j == 0) continue;  // Skip the center line
-      //      		TLine *line = new TLine(meanX + i * stddevX, meanY - 3 * stddevY, meanX + i * stddevX, meanY + 3 * stddevY);
-        //    		line->SetLineColor(kRed);
-          //  		line->Draw();
+}    
 
-            //		TLine *line2 = new TLine(meanX - 3 * stddevX, meanY + j * stddevY, meanX + 3 * stddevX, meanY + j * stddevY);
-            //		line2->SetLineColor(kRed);
-            //		line2->Draw();
-       	//	 }
-   	// }
-	//double mean = (meanX, meanY);
-    	//double sigma = (stdevX, stdevY);  // Approximation of sigma for contour purposes
-	//double meanX = calculate_mean(dataX);
-        //double meanY = calculate_mean(dataY);
-        //double stddevX = calculate_stddev(dataX, meanX);
-        //double stddevY = calculate_stddev(dataY, meanY);   	
-    //	std::vector<double> contours = {
-      //  	meanX - 3 * stddevX, meanY - 3 * stddevY, 
-        //	meanX - 2 * stddevX, meanY - 2 * stddevY, 
-        //	meanX - 1 * stddevX, meanY - 1 * stddevY, 
-        //	meanX + 1 * stddevX, meanY + 1 * stddevY,
-        //	meanX + 2 * stddevX, meanY + 2 * stddevY,
-        //	meanX + 3 * stddevX, meanY + 3 * stddevY,
-//	};
-
-//	histogram->ClearContours();
-//	histogram->SetContour(contours.size(), contours.data());
-
-
-	//histogram3_f_nb->SetContour(contours.size(), contours.data());
-	//histogram6_f_tc->SetContour(contours.size(), contours.data());
-	//histogramxy->SetContour(contours.size(), contours.data());
-
-	//TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
-    	//pt->SetFillColor(0);
-    	//pt->SetTextAlign(12);
-    	//pt->AddText(Form("#chi^{2} = %.2f", chi2));
-    	//pt->AddText(Form("NDF = %d", ndf));
-    	//pt->Draw();
-
-    	//histogram->GetListOfFunctions()->Add(pt);
-}
 void AllDataOnlyBeam() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
-	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run1369*_crtana.root"); // Replace with your file path pattern
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13*_crtana.root"); // Replace with your file path pattern
 	TH1F *histogram1_f_nb = new TH1F("histogram1_f_nb", "Front Face X;No Beam", 10, -400, 400);
 	histogram1_f_nb->GetXaxis()->SetTitle("X Location (cm)");
     	histogram1_f_nb->GetYaxis()->SetTitle("Number of Hits");
@@ -221,34 +191,32 @@ void AllDataOnlyBeam() {
     	chain.SetBranchAddress("cl_sp_ts1", &cl_sp_ts1);
 
 	Long64_t nEntries = chain.GetEntries();
-
 	for (Long64_t i = 0; i < nEntries; ++i) {
         	chain.GetEntry(i);
-		if (cl_has_sp == nullptr || cl_has_sp->size() == 0 || !cl_has_sp->at(0)) {
+        	if (cl_has_sp == nullptr || cl_has_sp->size() == 0 || !cl_has_sp->at(0)) {
             		continue;
         	}
-		
-		for (size_t j = 0; j < cl_sp_x->size(); ++j) {
+
+        	for (size_t j = 0; j < cl_sp_x->size(); ++j) {
             		double t1 = cl_sp_ts1->at(j);
             		double x = cl_sp_x->at(j);
             		double y = cl_sp_y->at(j);
             		double z = cl_sp_z->at(j);
 			if (i % 10000 == 0) {
-				std::cout << "Entry " << i << ", Hit " << j << ": t1=" << t1 << ", x=" << x << ", y=" << y << ", z=" << z << std::endl;
-			}
-			
-			if (1529e3 < t1 && t1 < 1534e3) {
-				if (y > -350 && -370 < x && x < 370) {
-					if (-200 < z && z < -100) {
-						histogram4_f_tc->Fill(x);
-						histogram5_f_tc->Fill(y);
-						histogram6_f_tc->Fill(x,y);
-					}
-				}
-			}
-			
-			if (0 < t1 && t1 < 1529e3 || 1534e3 < t1 && t1 < 1000e6) {
-				if (y > -350 && -370 < x && x < 370) {  // cut off feet of detector
+                		std::cout << "Entry " << i << ", Hit " << j << ": t1=" << t1 << ", x=" << x << ", y=" << y << ", z=" << z << std::endl;
+        		}
+
+        		if (1529e3 < t1 && t1 < 1534e3) {
+                		if (y > -350 && -370 < x && x < 370) {
+                    			if (-200 < z && z < -100) {
+                        			histogram4_f_tc->Fill(x);
+                        			histogram5_f_tc->Fill(y);
+                        			histogram6_f_tc->Fill(x, y);
+                   		 	}
+               		 	}
+           	 	}
+			if ((0 < t1 && t1 < 1529e3) || (1534e3 < t1 && t1 < 1000e6)) {
+                		if (y > -350 && -370 < x && x < 370) {  // cut off feet of detector
                     			if (-200 < z && z < -100) {
                         			histogram1_f_nb->Fill(x);
                         			histogram2_f_nb->Fill(y);
@@ -259,20 +227,11 @@ void AllDataOnlyBeam() {
         	}
     	}
 
-	//std::vector<double> contours = {
-       // -3, -2, -1, 1, 2, 3
-    	//};
-	
-	//histogram3_f_nb->ClearContours();
-	//histogram3_f_nb->SetContour(contours.size(), contours.data());
-    	//histogram6_f_tc->ClearContours();
-	//histogram6_f_tc->SetContour(contours.size(), contours.data());
-
 	TH1F *histogramx = (TH1F*)histogram4_f_tc->Clone("histogramx");
-	histogramx->Add(histogram1_f_nb, -1.0 / 199999);
-	histogramx->GetXaxis()->SetTitle("X Location (cm)");
-        histogramx->GetYaxis()->SetTitle("Number of Hits)");
-
+        histogramx->Add(histogram1_f_nb, -1.0 / 199999);
+        histogramx->GetXaxis()->SetTitle("X Location (cm)");
+        histogramx->GetYaxis()->SetTitle("Number of Hits");	
+		
 	TH1F *histogramy = (TH1F*)histogram5_f_tc->Clone("histogramy");
         histogramy->Add(histogram2_f_nb, -1.0 / 199999);
 	histogramy->GetXaxis()->SetTitle("Y Location (cm)");
@@ -294,7 +253,8 @@ void AllDataOnlyBeam() {
     	c3_f_nb->cd();
     	histogram3_f_nb->Draw("COLZ");
 	fit_gaussian2D(histogram3_f_nb);	
-	histogram3_f_nb->SetContour(0);
+	//histogram6_f_tc->Draw("CONT1 SAME");
+
 	c4_f_tc->cd();
 	histogram4_f_tc->Draw();
 	fit_gaussian1D(histogram4_f_tc);
@@ -304,8 +264,6 @@ void AllDataOnlyBeam() {
 	c6_f_tc->cd();
         histogram6_f_tc->Draw("COLZ");
         fit_gaussian2D(histogram6_f_tc);
-	histogram6_f_tc->SetContour(0);
-
 	c7_f_ob->cd();
         histogramx->Draw();
         fit_gaussian1D(histogramx);
@@ -315,7 +273,6 @@ void AllDataOnlyBeam() {
 	c9_f_ob->cd();
         histogramxy->Draw("COLZ");
         fit_gaussian2D(histogramxy);
-	histogramxy->SetContour(0);
 
 	c1_f_nb->SaveAs("Front_face_x_nb.png");
     	c2_f_nb->SaveAs("Front_face_y_nb.png");
