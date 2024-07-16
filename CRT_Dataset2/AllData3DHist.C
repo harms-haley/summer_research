@@ -70,27 +70,27 @@ void fit_gaussian1D(TH1F* histogram) {
 void AllData3DHist() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
 	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13*_crtana.root"); // Replace with your file path pattern
-	TH1F *histogram1_f_nb = new TH1F("histogram1_f_nb", "Front Face X;No Beam", 10, -400, 400);
+	TH1F *histogram1_f_nb = new TH1F("histogram1_f_nb", "Front Face X;No Beam", 10, -360, 360);
 	histogram1_f_nb->GetXaxis()->SetTitle("X Location (cm)");
     	histogram1_f_nb->GetYaxis()->SetTitle("Number of Hits");
 
-	TH1F *histogram2_f_nb = new TH1F("histogram2_f_nb", "Front Face Y;No Beam", 10, -400, 400);
+	TH1F *histogram2_f_nb = new TH1F("histogram2_f_nb", "Front Face Y;No Beam", 10, -360, 360);
 	histogram2_f_nb->GetXaxis()->SetTitle("Y Location (cm)");
         histogram2_f_nb->GetYaxis()->SetTitle("Number of Hits");
 
-	TH2F *histogram3_f_nb = new TH2F("histogram3_f_nb", "Front Face XY;No Beam", 10, -400, 400, 10, -400, 400);
+	TH2F *histogram3_f_nb = new TH2F("histogram3_f_nb", "Front Face XY;No Beam", 10, -360, 360, 10, -360, 360);
 	histogram3_f_nb->GetXaxis()->SetTitle("X Location (cm)");
         histogram3_f_nb->GetYaxis()->SetTitle("Y Location (cm)");
 
-	TH1F *histogram4_f_tc = new TH1F("histogram4_f_tc", "Front Face X; Time Cut", 10, -400, 400);
+	TH1F *histogram4_f_tc = new TH1F("histogram4_f_tc", "Front Face X; Time Cut", 10, -360, 360);
         histogram4_f_tc->GetXaxis()->SetTitle("X Location (cm)");
         histogram4_f_tc->GetYaxis()->SetTitle("Number of Hits");
 
-	TH1F *histogram5_f_tc = new TH1F("histogram5_f_tc", "Front Face Y; Time Cut", 10, -400, 400);
+	TH1F *histogram5_f_tc = new TH1F("histogram5_f_tc", "Front Face Y; Time Cut", 10, -360, 360);
         histogram5_f_tc->GetXaxis()->SetTitle("Y Location (cm)");
         histogram5_f_tc->GetYaxis()->SetTitle("Number of Hits");
 
-	TH2F *histogram6_f_tc = new TH2F("histogram6_f_tc", "Front Face XY; Time Cut", 10, -400, 400, 10, -400, 400);
+	TH2F *histogram6_f_tc = new TH2F("histogram6_f_tc", "Front Face XY; Time Cut", 10, -360, 360, 10, -360, 360);
 	histogram6_f_tc->GetXaxis()->SetTitle("X Location (cm)");
         histogram6_f_tc->GetYaxis()->SetTitle("Y Location (cm)");
 	//histogram6_f_tc->SetContour(contours.size(), contours.data());
@@ -120,6 +120,7 @@ void AllData3DHist() {
     	chain.SetBranchAddress("cl_sp_ts1", &cl_sp_ts1);
 	
 	//gStyle->SetNumberContours(1);
+	gStyle->SetOptStat(0);
 	Long64_t nEntries = chain.GetEntries();
 
 	for (Long64_t i = 0; i < nEntries; ++i) {
@@ -138,23 +139,23 @@ void AllData3DHist() {
 			}
 			
 			if (1529e3 < t1 && t1 < 1534e3) {
-				if (y > -350 && -370 < x && x < 370) {
+				//if (y > -350 && -370 < x && x < 370) {
 					if (-200 < z && z < -100) {
 						histogram4_f_tc->Fill(x);
 						histogram5_f_tc->Fill(y);
 						histogram6_f_tc->Fill(x,y);
 					}
-				}
+				//}
 			}
 			
 			if (0 < t1 && t1 < 1529e3 || 1534e3 < t1 && t1 < 1000e6) {
-				if (y > -350 && -370 < x && x < 370) {  // cut off feet of detector
+				//if (y > -350 && -370 < x && x < 370) {  // cut off feet of detector
                     			if (-200 < z && z < -100) {
                         			histogram1_f_nb->Fill(x);
                         			histogram2_f_nb->Fill(y);
                         			histogram3_f_nb->Fill(x, y);
                     			}
-                		}
+                		//}
             		}
         	}
     	}
