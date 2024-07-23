@@ -66,6 +66,10 @@ void fit_gaussian1D(TH1F* histogram) {
 	gStyle->SetOptStat(0);
 	double entries = histogram->GetEntries();
 	std::cout << "Entries: " << entries << std::endl;
+	
+	fit_func->SetLineColor(kRed);
+	fit_func->SetLineWidth(2);
+	fit_func->Draw("same");
 
 }
   
@@ -125,7 +129,7 @@ void fit_gaussian2D(TH2F* histogram) {
 
 void AllDataUpdate() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
-	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run1369*_crtana_22jul2024.root"); // Replace with your file path pattern
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run*_crtana_22jul2024.root"); // Replace with your file path pattern
 	TH1F *histogram1_f_nb = new TH1F("histogram1_f_nb", "Front Face X;No Beam", 10, -360, 360);
 	histogram1_f_nb->GetXaxis()->SetTitle("X Location (cm)");
     	histogram1_f_nb->GetYaxis()->SetTitle("Number of Hits");
@@ -160,6 +164,11 @@ void AllDataUpdate() {
 	TCanvas *c7_f_ob = new TCanvas("c7_f_ob", "Front Face X OB");
         TCanvas *c8_f_ob = new TCanvas("c8_f_ob", "Front Face Y OB");
         TCanvas *c9_f_ob = new TCanvas("c9_f_ob", "Front Face XY OB");
+	TCanvas *c10_f_nb_scaled = new TCanvas("c10_f_nb_scaled", "Front Face X NB Scaled");
+    	TCanvas *c11_f_nb_scaled = new TCanvas("c11_f_nb_scaled", "Front Face Y NB Scaled");
+    	TCanvas *c12_f_nb_scaled = new TCanvas("c12_f_nb_scaled", "Front Face XY NB Scaled");
+
+
 
 	std::vector<double> *cl_sp_x = nullptr;
     	std::vector<double> *cl_sp_y = nullptr;
@@ -242,10 +251,10 @@ void AllDataUpdate() {
 	//histogramxy->SetContour(contours.size(), contours.data());
 
 	c1_f_nb->cd();
-    	histogram1_f_nb->Draw();
+    	histogram1_f_nb->Draw("HIST");
 	fit_gaussian1D(histogram1_f_nb);
     	c2_f_nb->cd();
-    	histogram2_f_nb->Draw();
+    	histogram2_f_nb->Draw("HIST");
 	fit_gaussian1D(histogram2_f_nb);
     	c3_f_nb->cd();
     	histogram3_f_nb->Draw("COLZ");
@@ -253,23 +262,39 @@ void AllDataUpdate() {
 	//histogram6_f_tc->Draw("CONT1 SAME");
 
 	c4_f_tc->cd();
-	histogram4_f_tc->Draw();
+	histogram4_f_tc->Draw("HIST");
 	fit_gaussian1D(histogram4_f_tc);
 	c5_f_tc->cd();
-        histogram5_f_tc->Draw();
+        histogram5_f_tc->Draw("HIST");
         fit_gaussian1D(histogram5_f_tc);
 	c6_f_tc->cd();
         histogram6_f_tc->Draw("COLZ");
         fit_gaussian2D(histogram6_f_tc);
 	c7_f_ob->cd();
-        histogramx->Draw();
+        histogramx->Draw("HIST");
         fit_gaussian1D(histogramx);
 	c8_f_ob->cd();
-        histogramy->Draw();
+        histogramy->Draw("HIST");
         fit_gaussian1D(histogramy);
 	c9_f_ob->cd();
         histogramxy->Draw("COLZ");
         fit_gaussian2D(histogramxy);
+
+	c10_f_nb_scaled->cd();
+    	histogram1_f_nb->Draw("HIST");
+    	c11_f_nb_scaled->cd();
+    	histogram2_f_nb->Draw("HIST");
+    	//c12_f_nb_scaled->cd();
+    	//histogram3_f_nb->Draw("COLZ");
+
+	TCanvas *c_overlay = new TCanvas("c_overlay", "Y Face Time Cut Compared to Cosmic Ray Background");
+    	histogram5_f_tc->SetLineColor(kBlue);  // Set the color of the first histogram
+    	histogram5_f_tc->Draw("HIST");
+   	histogram2_f_nb->SetLineColor(kRed);  // Set the color of the second histogram
+    	histogram2_f_nb->SetLineStyle(2);
+	histogram2_f_nb->Draw("HIST SAME");  // Draw the second histogram on the same canvas
+
+
 
 	c1_f_nb->SaveAs("NewData_Front_face_x_nb.png");
     	c2_f_nb->SaveAs("NewData_Front_face_y_nb.png");
@@ -280,6 +305,8 @@ void AllDataUpdate() {
 	c7_f_ob->SaveAs("NewData_Front_face_x_ob.png");
         c8_f_ob->SaveAs("NewData_Front_face_y_ob.png");
         c9_f_ob->SaveAs("NewData_Front_face_ob.png");
-
+	c10_f_nb_scaled->SaveAs("Scaled_Front_face_x_nb.png");
+	c11_f_nb_scaled->SaveAs("Scaled_Front_face_y_nb.png");
+	c_overlay->SaveAs("NewData_Y_overlay.png");
 }
 
