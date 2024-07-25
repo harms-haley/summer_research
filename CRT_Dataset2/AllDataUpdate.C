@@ -129,7 +129,11 @@ void fit_gaussian2D(TH2F* histogram) {
 
 void AllDataUpdate() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
-	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run*_crtana_22jul2024.root"); // Replace with your file path pattern
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13688_crtana_22jul2024.root");
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13689_crtana_22jul2024.root");
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13690_crtana_22jul2024.root");
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13693_crtana_22jul2024.root");
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13758_crtana_22jul2024.root"); // Replace with your file path pattern
 	TH1F *histogram1_f_nb = new TH1F("histogram1_f_nb", "Front Face X;No Beam", 10, -360, 360);
 	histogram1_f_nb->GetXaxis()->SetTitle("X Location (cm)");
     	histogram1_f_nb->GetYaxis()->SetTitle("Number of Hits");
@@ -142,15 +146,15 @@ void AllDataUpdate() {
 	histogram3_f_nb->GetXaxis()->SetTitle("X Location (cm)");
         histogram3_f_nb->GetYaxis()->SetTitle("Y Location (cm)");
 
-	TH1F *histogram4_f_tc = new TH1F("histogram4_f_tc", "Front Face X; Time Cut", 10, -360, 360);
+	TH1F *histogram4_f_tc = new TH1F("histogram4_f_tc", "X Axis of the CRT Detector Activity on the Front Face", 10, -360, 360);
         histogram4_f_tc->GetXaxis()->SetTitle("X Location (cm)");
         histogram4_f_tc->GetYaxis()->SetTitle("Number of Hits");
 
-	TH1F *histogram5_f_tc = new TH1F("histogram5_f_tc", "Front Face Y; Time Cut", 10, -360, 360);
+	TH1F *histogram5_f_tc = new TH1F("histogram5_f_tc", "Y Axis of the CRT Detector Activity on the Front Face", 10, -360, 360);
         histogram5_f_tc->GetXaxis()->SetTitle("Y Location (cm)");
         histogram5_f_tc->GetYaxis()->SetTitle("Number of Hits");
 
-	TH2F *histogram6_f_tc = new TH2F("histogram6_f_tc", "Front Face XY; Time Cut", 10, -360, 360, 10, -360, 360);
+	TH2F *histogram6_f_tc = new TH2F("histogram6_f_tc", "2D Visualization of the Detector Activity on the CRT Front Face", 10, -360, 360, 10, -360, 360);
 	histogram6_f_tc->GetXaxis()->SetTitle("X Location (cm)");
         histogram6_f_tc->GetYaxis()->SetTitle("Y Location (cm)");
 	//histogram6_f_tc->SetContour(contours.size(), contours.data());
@@ -161,7 +165,7 @@ void AllDataUpdate() {
 	TCanvas *c4_f_tc = new TCanvas("c4_f_tc", "Front Face X TC");
         TCanvas *c5_f_tc = new TCanvas("c5_f_tc", "Front Face Y TC");
         TCanvas *c6_f_tc = new TCanvas("c6_f_tc", "Front Face XY TC");
-	TCanvas *c7_f_ob = new TCanvas("c7_f_ob", "Front Face X OB");
+	TCanvas *c7_f_ob = new TCanvas("c7_f_ob", "Detector Front Face X OB");
         TCanvas *c8_f_ob = new TCanvas("c8_f_ob", "Front Face Y OB");
         TCanvas *c9_f_ob = new TCanvas("c9_f_ob", "Front Face XY OB");
 	TCanvas *c10_f_nb_scaled = new TCanvas("c10_f_nb_scaled", "Front Face X NB Scaled");
@@ -207,7 +211,7 @@ void AllDataUpdate() {
                    		 	}
                		 	}
            	 	}
-			if ((0 < t1 && t1 < 1530e3) || (1533e3 < t1 && t1 < 1000e6)) {
+			if (1527e3 < t1 && t1 < 1530e3) { // || (1533e3 < t1 && t1 < 1536e3)) {
                 		if (y > -360 && -360 < x && x < 360) {  // cut off feet of detector
                     			if (-200 < z && z < -100) {
                         			histogram1_f_nb->Fill(x);
@@ -229,9 +233,9 @@ void AllDataUpdate() {
         double no_spill = total_time - spill_time;
         double weight = spill_time / no_spill;
 
-	histogram1_f_nb->Scale(weight);
-	histogram2_f_nb->Scale(weight);
-	histogram3_f_nb->Scale(weight);
+//	histogram1_f_nb->Scale(weight);
+//	histogram2_f_nb->Scale(weight);
+//	histogram3_f_nb->Scale(weight);
 
 	TH1F *histogramx = (TH1F*)histogram4_f_tc->Clone("histogramx");
         histogramx->Add(histogram1_f_nb, -1.0);
@@ -280,33 +284,33 @@ void AllDataUpdate() {
         histogramxy->Draw("COLZ");
         fit_gaussian2D(histogramxy);
 
-	c10_f_nb_scaled->cd();
-    	histogram1_f_nb->Draw("HIST");
-    	c11_f_nb_scaled->cd();
-    	histogram2_f_nb->Draw("HIST");
+//	c10_f_nb_scaled->cd();
+//    	histogram1_f_nb->Draw("HIST");
+//    	c11_f_nb_scaled->cd();
+//    	histogram2_f_nb->Draw("HIST");
     	//c12_f_nb_scaled->cd();
     	//histogram3_f_nb->Draw("COLZ");
 
-	TCanvas *c_overlay = new TCanvas("c_overlay", "Y Face Time Cut Compared to Cosmic Ray Background");
-    	histogram5_f_tc->SetLineColor(kBlue);  // Set the color of the first histogram
-    	histogram5_f_tc->Draw("HIST");
-   	histogram2_f_nb->SetLineColor(kRed);  // Set the color of the second histogram
-    	histogram2_f_nb->SetLineStyle(2);
-	histogram2_f_nb->Draw("HIST SAME");  // Draw the second histogram on the same canvas
+//	TCanvas *c_overlay = new TCanvas("c_overlay", "Y Face Time Cut Compared to Cosmic Ray Background");
+//    	histogram5_f_tc->SetLineColor(kBlue);  // Set the color of the first histogram
+//    	histogram5_f_tc->Draw("HIST");
+//   	histogram2_f_nb->SetLineColor(kRed);  // Set the color of the second histogram
+//    	histogram2_f_nb->SetLineStyle(2);
+//	histogram2_f_nb->Draw("HIST SAME");  // Draw the second histogram on the same canvas
 
 
 
-	c1_f_nb->SaveAs("NewData_Front_face_x_nb.png");
-    	c2_f_nb->SaveAs("NewData_Front_face_y_nb.png");
-    	c3_f_nb->SaveAs("NewData_Front_face_nb.png");
-	c4_f_tc->SaveAs("NewData_Front_face_x_tc.png");
-        c5_f_tc->SaveAs("NewData_Front_face_y_tc.png");
-        c6_f_tc->SaveAs("NewData_Front_face_tc.png");
+//	c1_f_nb->SaveAs("NewData_Front_face_x_nb.png");
+//    	c2_f_nb->SaveAs("NewData_Front_face_y_nb.png");
+//    	c3_f_nb->SaveAs("NewData_Front_face_nb.png");
+//	c4_f_tc->SaveAs("NewData_Front_face_x_tc.png");
+//        c5_f_tc->SaveAs("NewData_Front_face_y_tc.png");
+//        c6_f_tc->SaveAs("NewData_Front_face_tc.png");
 	c7_f_ob->SaveAs("NewData_Front_face_x_ob.png");
         c8_f_ob->SaveAs("NewData_Front_face_y_ob.png");
         c9_f_ob->SaveAs("NewData_Front_face_ob.png");
-	c10_f_nb_scaled->SaveAs("Scaled_Front_face_x_nb.png");
-	c11_f_nb_scaled->SaveAs("Scaled_Front_face_y_nb.png");
-	c_overlay->SaveAs("NewData_Y_overlay.png");
+//	c10_f_nb_scaled->SaveAs("Scaled_Front_face_x_nb.png");
+//	c11_f_nb_scaled->SaveAs("Scaled_Front_face_y_nb.png");
+//	c_overlay->SaveAs("NewData_Y_overlay.png");
 }
 
