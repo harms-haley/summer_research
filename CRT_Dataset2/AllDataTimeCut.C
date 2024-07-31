@@ -11,7 +11,10 @@
 #include <algorithm>
 #include "TPaveText.h"
 #include "TF2.h"
-
+#include <TStyle.h>
+#include <TMath.h>
+#include <TH2.h>
+#include <TLine.h>
 
 double gaussian(double *x, double *par) {
 	double arg = (x[0] - par[1]) / par[2];
@@ -34,36 +37,6 @@ double calculate_stddev(const std::vector<double>& data, double mean) {
         	sum += (value - mean) * (value - mean);
     	}
     	return sqrt(sum / data.size());
-}
-
-void fit_gaussian1D(TH1F* histogram) {
-	int n_bins = histogram->GetNbinsX();
-    	std::vector<double> data;
-    	for (int i = 1; i <= n_bins; ++i) {
-        	int bin_count = histogram->GetBinContent(i);
-        	double bin_center = histogram->GetBinCenter(i);
-        	for (int j = 0; j < bin_count; ++j) {
-            		data.push_back(bin_center);
-        	}
-    	}	
-	double mean = calculate_mean(data);
-    	double stddev = calculate_stddev(data, mean);
-
-    	TF1 *fit_func = new TF1("fit_func", gaussian, histogram->GetXaxis()->GetXmin(), histogram->GetXaxis()->GetXmax(), 3);
-    	fit_func->SetParameters(histogram->GetMaximum(), mean, stddev);
-    	histogram->Fit(fit_func, "R");
-	
-	double chi2 = fit_func->GetChisquare();
-    	int ndf = fit_func->GetNDF();
-
-	TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
-    	pt->SetFillColor(0);
-    	pt->SetTextAlign(12);
-    	pt->AddText(Form("#chi^{2} = %.2f", chi2));
-    	pt->AddText(Form("NDF = %d", ndf));
-    	pt->Draw();
-
-    	histogram->GetListOfFunctions()->Add(pt);
 }
 
 void fit_gaussian2D(TH2F* histogram) {
@@ -90,44 +63,54 @@ void fit_gaussian2D(TH2F* histogram) {
 
     	TF2 *fit_func = new TF2("fit_func", gaussian2D, histogram->GetXaxis()->GetXmin(), histogram->GetXaxis()->GetXmax(), histogram->GetYaxis()->GetXmin(), histogram->GetYaxis()->GetXmax(), 5);
     	fit_func->SetParameters(histogram->GetMaximum(), meanX, stddevX, meanY, stddevY);
-    	histogram->Fit(fit_func, "R");
+    	histogram->Fit(fit_func, "N");
 
     	double chi2 = fit_func->GetChisquare();
     	int ndf = fit_func->GetNDF();
 
-	TPaveText *pt = new TPaveText(0.6, 0.7, 0.9, 0.9, "NDC");
-    	pt->SetFillColor(0);
-    	pt->SetTextAlign(12);
-    	pt->AddText(Form("#chi^{2} = %.2f", chi2));
-    	pt->AddText(Form("NDF = %d", ndf));
-    	pt->Draw();
+	std::cout << "#chi^{2} = " << chi2 << std::endl;
+    	std::cout << "NDF = " << ndf << std::endl;
 
-    	histogram->GetListOfFunctions()->Add(pt);
+	gStyle->SetOptStat(0);
+	double entries = histogram->GetEntries();
+	std::cout << "Entries: " << entries << std::endl;	
+
 }
 void AllDataTimeCut() {
 	TChain chain("crtana/tree"); // Ensure "myTree" is the correct name of your TTree
-	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13*_crtana.root"); // Replace with your file path pattern
-	TH1F *histogram1_f_t = new TH1F("histogram1_f_t", "Front Face X;X;Counts", 10, -400, 400);
-	TH1F *histogram2_f_t = new TH1F("histogram2_f_t", "Front Face Y;Y;Counts", 10, -400, 400);
-	TH1F *histogram4_f_t = new TH1F("histogram4_f_t", "Time", 10, 1520e3 , 1540e3);
-	TH2F *histogram3_f_t = new TH2F("histogram3_f_t", "Front Face XY;X;Y;Counts", 10, -400, 400, 10, -400, 400);
-    	TCanvas *c1_f_t = new TCanvas("c1_f_t", "Front Face X");
-	TCanvas *c2_f_t = new TCanvas("c2_f_t", "Front Face Y");
+	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13688_crtana_22jul2024.root"); // Replace with your file path pattern
+//	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13689_crtana_22jul2024.root");
+//	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13693_crtana_22jul2024.root");
+//	chain.Add("/pnfs/sbnd/persistent/users/hlay/crt_comm_summer_2024/run13758_crtana_22jul2024.root");
+
+
+	//TH1F *histogram1_f_t = new TH1F("histogram1_f_t", "Front Face X;X;Counts", 10, -400, 400);
+	//TH1F *histogram2_f_t = new TH1F("histogram2_f_t", "Front Face Y;Y;Counts", 10, -400, 400);
+//	TH1F *histogram4_f_t = new TH1F("histogram4_f_t", "Time", 100, 1525e3 , 1540e3);
+	TH2F *histogram3_f_t = new TH2F("histogram3_f_t", "Front Face XY", 10, -360, 360, 10, -360, 360);
+    	//TCanvas *c1_f_t = new TCanvas("c1_f_t", "Front Face X");
+	//TCanvas *c2_f_t = new TCanvas("c2_f_t", "Front Face Y");
 	TCanvas *c3_f_t = new TCanvas("c3_f_t", "Front Face XY");
-	TCanvas *c4_f_t = new TCanvas("c4_f_t", "Time");
+	//TCanvas *c4_f_t = new TCanvas("c4_f_t", "Time");
 
 	std::vector<double> *cl_sp_x = nullptr;
     	std::vector<double> *cl_sp_y = nullptr;
     	std::vector<double> *cl_sp_z = nullptr;
     	std::vector<double> *cl_sp_ts1 = nullptr;
     	std::vector<bool> *cl_has_sp = nullptr;
+	std::vector<double> *tdc_timestamp = nullptr;
 	chain.SetBranchAddress("cl_has_sp", &cl_has_sp);
     	chain.SetBranchAddress("cl_sp_x", &cl_sp_x);
     	chain.SetBranchAddress("cl_sp_y", &cl_sp_y);
     	chain.SetBranchAddress("cl_sp_z", &cl_sp_z);
     	chain.SetBranchAddress("cl_sp_ts1", &cl_sp_ts1);
+	chain.SetBranchAddress("tdc_timestamp", &tdc_timestamp);
 
 	Long64_t nEntries = chain.GetEntries();
+	const Long64_t maxEntries = 30000;
+	nEntries = std::min(nEntries, maxEntries);	
+
+
 
 	for (Long64_t i = 0; i < nEntries; ++i) {
         	chain.GetEntry(i);
@@ -140,41 +123,20 @@ void AllDataTimeCut() {
             		double x = cl_sp_x->at(j);
             		double y = cl_sp_y->at(j);
             		double z = cl_sp_z->at(j);
+			double t = tdc_timestamp->at(j);
 			if (i % 10000 == 0) {
-				std::cout << "Entry " << i << ", Hit " << j << ": t1=" << t1 << ", x=" << x << ", y=" << y << ", z=" << z << std::endl;
+				std::cout << "Entry " << i << ": t=" << t << std::endl;
+				if (1529e3 < t1 && t1 < 1533e3) {
+					if (-360 < y && y < 360 && -360 < x && x < 360) {  // cut off feet of detector
+                    				if (-200 < z && z < -100) {
+                        				histogram3_f_t->Fill(x, y);
+                    				}
+                			}
+            			}
+    				c3_f_t->cd();
+    				histogram3_f_t->Draw("COLZ");
+				fit_gaussian2D(histogram3_f_t);	
 			}
-			
-			histogram4_f_t->Fill(t1);
-			
-			if (1529e3 < t1 && t1 < 1534e3) {
-				if (y > -350 && -370 < x && x < 370) {  // cut off feet of detector
-                    			if (-200 < z && z < -100) {
-                        			histogram1_f_t->Fill(x);
-                        			histogram2_f_t->Fill(y);
-                        			histogram3_f_t->Fill(x, y);
-                    			}
-                		}
-            		}
-        	}
-    	}
-
-
-	c1_f_t->cd();
-    	histogram1_f_t->Draw();
-	fit_gaussian1D(histogram1_f_t);
-    	c2_f_t->cd();
-    	histogram2_f_t->Draw();
-	fit_gaussian1D(histogram2_f_t);
-    	c3_f_t->cd();
-    	histogram3_f_t->Draw("COLZ");
-	fit_gaussian2D(histogram3_f_t);	
-	c4_f_t->cd();
-	histogram4_f_t->Draw();
-
-	c1_f_t->SaveAs("Front_face_x_t_all.png");
-    	c2_f_t->SaveAs("Front_face_y_t_all.png");
-    	c3_f_t->SaveAs("Front_face_t_all.png");
-	c4_f_t->SaveAs("Time.png");
-
+		}
+	}
 }
-
