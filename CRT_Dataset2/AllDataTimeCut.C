@@ -98,7 +98,7 @@ void AllDataTimeCut() {
     	std::vector<double> *cl_sp_z = nullptr;
     	std::vector<double> *cl_sp_ts1 = nullptr;
     	std::vector<bool> *cl_has_sp = nullptr;
-	std::vector<double> *tdc_timestamp = nullptr;
+	std::vector<unsigned long> *tdc_timestamp = nullptr;
 	chain.SetBranchAddress("cl_has_sp", &cl_has_sp);
     	chain.SetBranchAddress("cl_sp_x", &cl_sp_x);
     	chain.SetBranchAddress("cl_sp_y", &cl_sp_y);
@@ -109,6 +109,8 @@ void AllDataTimeCut() {
 	Long64_t nEntries = chain.GetEntries();
 	const Long64_t maxEntries = 30000;
 	nEntries = std::min(nEntries, maxEntries);	
+	const Long64_t interval = 5000; // Change this to the interval you want
+    	Long64_t lastProcessedEntry = -1;
 
 
 
@@ -117,26 +119,48 @@ void AllDataTimeCut() {
 		if (cl_has_sp == nullptr || cl_has_sp->size() == 0 || !cl_has_sp->at(0)) {
             		continue;
         	}
-		
-		for (size_t j = 0; j < cl_sp_x->size(); ++j) {
+
+		if (cl_sp_x->size() != cl_sp_y->size() || cl_sp_x->size() != cl_sp_z->size() || cl_sp_x->size() != cl_sp_ts1->size()) {
+            		std::cerr << "Warning: Mismatched sizes in vectors at entry " << i << std::endl;
+            		continue;
+       	 	}
+		if (tdc_timestamp->empty()) {
+            		std::cerr << "Warning: tdc_timestamp is empty at entry " << i << std::endl;
+            		continue;
+        	}
+
+		size_t min_size = std::min({cl_sp_x->size(), cl_sp_y->size(), cl_sp_z->size(), cl_sp_ts1->size()});
+                if (i % interval == 0) {
+                	std::cout << "Entry " << i << ": Vector sizes - cl_sp_x: " << cl_sp_x->size()
+        		          << ", cl_sp_y: " << cl_sp_y->size() << ", cl_sp_z: " << cl_sp_z->size()
+                                  << ", cl_sp_ts1: " << cl_sp_ts1->size() << ", tdc_timestamp: " << tdc_timestamp->size() << std::endl;                          
+		}
+		for (size_t j = 0; j < min_size; ++j) {
             		double t1 = cl_sp_ts1->at(j);
             		double x = cl_sp_x->at(j);
             		double y = cl_sp_y->at(j);
             		double z = cl_sp_z->at(j);
-			double t = tdc_timestamp->at(j);
-			if (i % 10000 == 0) {
-				std::cout << "Entry " << i << ": t=" << t << std::endl;
-				if (1529e3 < t1 && t1 < 1533e3) {
-					if (-360 < y && y < 360 && -360 < x && x < 360) {  // cut off feet of detector
-                    				if (-200 < z && z < -100) {
-                        				histogram3_f_t->Fill(x, y);
-                    				}
-                			}
-            			}
-    				c3_f_t->cd();
-    				histogram3_f_t->Draw("COLZ");
-				fit_gaussian2D(histogram3_f_t);	
-			}
+			unsigned long t = (tdc_timestamp->size() > 0) ? tdc_timestamp->at(0) : 0; // Default to 0 if empty
+
+			if (1529e3 < t1 && t1 < 1533e3) {
+				if (-360 < y && y < 360 && -360 < x && x < 360) {  // cut off feet of detector
+                    			if (-200 < z && z < -100) {
+                        			histogram3_f_t->Fill(x, y);
+                    				//std::cout << "Filled histogram with x=" << x << " and y=" << y << std::endl;  // Debugging output to confirm filling
+					}
+                		}
+            		}
+		}
+		if (i % interval == 0 && i != lastProcessedEntry) {
+            		if (!tdc_timestamp->empty()) {
+                		std::cout << "Entry " << i << ": t=" << tdc_timestamp->at(0) << std::endl;
+            		} else {
+                		std::cout << "Entry " << i << ": tdc_timestamp is empty" << std::endl;
+           		}
+			c3_f_t->cd();
+    			histogram3_f_t->Draw("COLZ");
+			fit_gaussian2D(histogram3_f_t);	
+			lastProcessedEntry = i;
 		}
 	}
 }
